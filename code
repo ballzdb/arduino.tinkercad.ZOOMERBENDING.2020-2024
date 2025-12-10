@@ -1,15 +1,58 @@
-int sensor1 ;
-int sensor2 ;
+// --- Pin Definitions ---
+// Use descriptive names instead of "magic numbers"
+const int SENSOR_PIN_1 = A5; // Analog input pin for the first sensor (e.g., LDR)
+const int SENSOR_PIN_2 = A0; // Analog input pin for the second sensor
+const int TONE_PIN_HIGH = 9; // Digital pin for the high-frequency tone output
+const int TONE_PIN_LOW = 6;  // Digital pin for the low-frequency tone output
+
+// --- Timing/Duration Constants ---
+const int TONE_DURATION = 100; // Duration of the tone in milliseconds
+const int LOOP_DELAY = 300;    // Delay between tone cycles in milliseconds
+
+// --- Global Variables (for sensor values) ---
+int sensorValue1 = 0;
+int sensorValue2 = 0;
+// Note: While the original code declared sensor1/sensor2 but didn't use them, 
+// using variables here makes the logic clear.
+
 void setup() {
+  // Initialize serial communication for optional debugging
+  // Serial.begin(9600); 
+  
+  // Nothing else needed in setup since we are only using analogRead and tone
 }
-   
+    
 void loop() {
-sensor1 = analogRead(A5);
-sensor2 = analogRead(A0); 
-noTone(6);
-tone(9,analogRead(A5) * 2, 100);
-delay(300);
-noTone(9);
-tone(6, analogRead(A0) * 2, 100);
-delay(300);
+  // 1. Read sensor values ONCE per loop
+  sensorValue1 = analogRead(SENSOR_PIN_1);
+  sensorValue2 = analogRead(SENSOR_PIN_2);
+  
+  // 2. Map the Analog Value (0-1023) to a Tone Frequency
+  // Analog values are usually 0-1023. We multiply by 2 to get a Max Freq ~2046 Hz.
+  // The 'tone' function is very happy with this!
+  int toneFrequency1 = sensorValue1 * 2;
+  int toneFrequency2 = sensorValue2 * 2;
+  
+  // --- Cycle 1: Play Tone 1 ---
+  // Ensure the other tone is off before starting a new one (prevents overlap/glitches)
+  noTone(TONE_PIN_LOW); 
+  
+  // Play tone 1: Pin 9 (TONE_PIN_HIGH) is driven by sensor 1
+  tone(TONE_PIN_HIGH, toneFrequency1, TONE_DURATION);
+  
+  // Wait for the duration of the tone + a little breathing room
+  delay(LOOP_DELAY);
+  
+  // --- Cycle 2: Play Tone 2 ---
+  // Ensure the other tone is off
+  noTone(TONE_PIN_HIGH);
+  
+  // Play tone 2: Pin 6 (TONE_PIN_LOW) is driven by sensor 2
+  tone(TONE_PIN_LOW, toneFrequency2, TONE_DURATION);
+  
+  // Wait for the duration of the tone + a little breathing room
+  delay(LOOP_DELAY);
+  
+  // Note: The original code's two 'noTone' calls essentially clear the previous tone
+  // before the next one starts, which is good practice to keep the pins quiet.
 }
